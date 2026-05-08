@@ -115,7 +115,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     needs: build
-    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
+    # SonarCloud project is configured for the upstream MaibornWolff repo only.
+    # The Futured fork has no SONAR_TOKEN and never will, so skip the job there.
+    if: |
+      github.repository == 'MaibornWolff/DependaCharta' &&
+      (github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request')
 
     defaults:
       run:
