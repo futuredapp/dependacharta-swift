@@ -61,6 +61,12 @@ VOLUME ["/workspace"]
 # Set default working directory for analysis
 WORKDIR /workspace
 
+# Tree-sitter style recursive parsers can blow the default 512KB JVM stack on
+# deeply-nested files (observed on real Swift codebases — see futured fork
+# fork-v0.2.1 release notes). Bump per-thread stack to 16MB. Override with
+# the JAVA_TOOL_OPTIONS env var at run time if a project still hits the limit.
+ENV JAVA_TOOL_OPTIONS="-Xss16m"
+
 # Set entrypoint
 ENTRYPOINT ["java", "-jar", "/app/dependacharta.jar"]
 
