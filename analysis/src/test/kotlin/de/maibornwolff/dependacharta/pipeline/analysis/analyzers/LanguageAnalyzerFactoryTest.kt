@@ -9,6 +9,7 @@ import de.maibornwolff.dependacharta.pipeline.analysis.analyzers.javascript.Java
 import de.maibornwolff.dependacharta.pipeline.analysis.analyzers.kotlin.KotlinAnalyzer
 import de.maibornwolff.dependacharta.pipeline.analysis.analyzers.php.PhpAnalyzer
 import de.maibornwolff.dependacharta.pipeline.analysis.analyzers.python.PythonAnalyzer
+import de.maibornwolff.dependacharta.pipeline.analysis.analyzers.swift.SwiftAnalyzer
 import de.maibornwolff.dependacharta.pipeline.analysis.analyzers.typescript.TypescriptAnalyzer
 import de.maibornwolff.dependacharta.pipeline.analysis.analyzers.vue.VueAnalyzer
 import de.maibornwolff.dependacharta.pipeline.analysis.model.FileInfo
@@ -78,6 +79,11 @@ class LanguageAnalyzerFactoryTest {
                 physicalPath = "",
                 content = ""
             )
+            val swiftFileInfo = FileInfo(
+                language = SupportedLanguage.SWIFT,
+                physicalPath = "",
+                content = ""
+            )
             return listOf(
                 Arguments.of(javaFileInfo, JavaAnalyzer(javaFileInfo)),
                 Arguments.of(cSharpFileInfo, CSharpAnalyzer(cSharpFileInfo)),
@@ -89,6 +95,7 @@ class LanguageAnalyzerFactoryTest {
                 Arguments.of(pythonFileInfo, PythonAnalyzer(pythonFileInfo)),
                 Arguments.of(cppFileInfo, CppAnalyzer(cppFileInfo)),
                 Arguments.of(vueFileInfo, VueAnalyzer(vueFileInfo)),
+                Arguments.of(swiftFileInfo, SwiftAnalyzer(swiftFileInfo)),
                 Arguments.of(delphiFileInfo, DelphiAnalyzer(delphiFileInfo))
             )
         }
