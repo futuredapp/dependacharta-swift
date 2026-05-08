@@ -49,6 +49,7 @@ class SwiftAnalyzer(
     ): List<Declaration> {
         val declarations = declarationRegex
             .findAll(code)
+            .filter { isTopLevelDeclaration(code, it.range.first) }
             .map {
                 Declaration(
                     name = it.groupValues[2],
@@ -61,6 +62,7 @@ class SwiftAnalyzer(
         val firstFileNamePart = fileName.substringBefore("+")
         val extensions = extensionRegex
             .findAll(code)
+            .filter { isTopLevelDeclaration(code, it.range.first) }
             .map {
                 Declaration(
                     name = extensionNodeName(fileName, it.groupValues[1]),
@@ -76,6 +78,20 @@ class SwiftAnalyzer(
         }
 
         return (declarations + projectExtensions).distinctBy { it.name }
+    }
+
+    private fun isTopLevelDeclaration(
+        code: String,
+        declarationStartIndex: Int
+    ): Boolean {
+        var depth = 0
+        for (index in 0 until declarationStartIndex) {
+            when (code[index]) {
+                '{' -> depth++
+                '}' -> depth--
+            }
+        }
+        return depth == 0
     }
 
     private fun extensionNodeName(
