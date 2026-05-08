@@ -261,6 +261,19 @@ Want to **contribute**? Check out our [contributing guide](CONTRIBUTING.md).
 - [Semantic Versioning](https://semver.org) for releases
 - Automated CI/CD pipeline (see [PIPELINE.md](PIPELINE.md))
 
+## Fork distribution (Futured)
+
+This fork publishes its patched analyzer to GitHub Container Registry alongside the upstream-mirrored Docker Hub image:
+
+```bash
+docker pull ghcr.io/futuredapp/dependacharta-swift:fork-v0.1.0
+docker pull ghcr.io/futuredapp/dependacharta-swift:latest
+```
+
+The image is consumed by downstream Futured CI pipelines (e.g. `smsticket-ios`) so contributors do not have to build the JAR locally. Tags follow `fork-vX.Y.Z` to distinguish the fork's release stream from upstream's `vX.Y.Z` namespace; `latest` always points to the newest fork release.
+
+The build is performed by `.github/workflows/ghcr-fork.yml` on every `fork-v*.*.*` tag push and on-demand via the Actions UI / `gh workflow run`. The image is private; consumers in the same GitHub org pull authenticated via the workflow's built-in `GITHUB_TOKEN`.
+
 ## Links
 
 - [Releases](https://github.com/MaibornWolff/DependaCharta/releases)
