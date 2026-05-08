@@ -1,0 +1,98 @@
+name: Release visualizer bundle
+
+on:
+  push:
+    tags:
+      - 'fork-v*.*.*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to build (default: current branch)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-visualizer-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Build and release visualizer bundle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+
+      - name: Install visualization deps
+        run: mise run install-visualization-deps
+
+      - name: Build visualization
+        run: mise run build-visualization
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Verify build output
+        run: |
+          set -euo pipefail
+          test -f visualization/dist/visualization/browser/index.html
+          ls -la visualization/dist/visualization/browser/ | head -20
+
+      - name: Package bundle
+        id: package
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            version="${{ github.ref_name }}"
+          else
+            version="dispatch-$(git rev-parse --short=7 HEAD)"
+          fi
+          archive="dependacharta-visualizer-${version}.tar.gz"
+          tar -C visualization/dist/visualization/browser -czf "${archive}" .
+          ls -la "${archive}"
+          echo "archive=${archive}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.package.outputs.archive }}
+          name: ${{ steps.package.outputs.version }}
+          tag_name: ${{ steps.package.outputs.version }}
+          # Don't fail if a Release for this tag already exists (the analyzer's
+          # ghcr-fork.yml runs on the same trigger and may have created one).
+          # Just attach this artifact to the existing Release.
+          fail_on_unmatched_files: true
+          body: |
+            Static bundle of the DependaCharta visualizer (Futured fork).
+
+            Consumed by `futuredapp/codebase-architectures` via `studios.json`.
+
+            ## Install
+            ```bash
+            tar -xzf ${{ steps.package.outputs.archive }} -C path/to/serve
+            ```
+
+            ## Companion artifact
+            The Swift analyzer Docker image is published in lockstep at
+            `ghcr.io/futuredapp/dependacharta-swift:${{ steps.package.outputs.version }}`.
+          draft: false
+          prerelease: false
+
+      - name: Upload as workflow artifact (dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependacharta-visualizer-${{ steps.package.outputs.version }}
+          path: ${{ steps.package.outputs.archive }}
+          retention-days: 7
