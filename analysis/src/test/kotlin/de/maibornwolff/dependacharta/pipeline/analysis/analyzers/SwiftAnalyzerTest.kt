@@ -104,4 +104,33 @@ class SwiftAnalyzerTest {
         ).contains("FeedEndpoint")
             .doesNotContain("Endpoint")
     }
+
+    @Test
+    fun `does not expose nested declarations as global dependency targets`() {
+        val code = """
+            final class ProductionLogService {
+                struct Context: Sendable {
+                    let requestId: String
+                }
+            }
+
+            private struct GalleryPageView: UIViewControllerRepresentable {
+                func makeUIViewController(context: Context) -> UIViewController {
+                    UIViewController()
+                }
+            }
+        """.trimIndent()
+
+        val report = SwiftAnalyzer(
+            FileInfo(
+                language = SupportedLanguage.SWIFT,
+                physicalPath = "SMSTicket/Services/LogService.swift",
+                content = code
+            )
+        ).analyze()
+
+        assertThat(report.nodes.map { it.name() })
+            .contains("ProductionLogService", "GalleryPageView")
+            .doesNotContain("Context")
+    }
 }
