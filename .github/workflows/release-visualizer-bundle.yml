@@ -96,3 +96,13 @@ jobs:
           name: dependacharta-visualizer-${{ steps.package.outputs.version }}
           path: ${{ steps.package.outputs.archive }}
           retention-days: 7
+
+      - name: Notify codebase-architectures
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.CODEBASE_ARCHITECTURES_TOKEN }}
+        run: |
+          gh api repos/futuredapp/codebase-architectures/dispatches \
+            -f event_type=studio-released \
+            -f 'client_payload[fork]=dependacharta' \
+            -f 'client_payload[tag]=${{ steps.package.outputs.version }}'
